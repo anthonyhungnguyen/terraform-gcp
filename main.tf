@@ -12,6 +12,7 @@ resource "google_dataproc_cluster" "default" {
     endpoint_config {
       enable_http_port_access = "true" # Enable component gateway
     }
+
     gce_cluster_config {
       tags = ["dataproc"]
     }
@@ -30,7 +31,7 @@ resource "google_dataproc_cluster" "default" {
       machine_type  = var.instance_type
       disk_config {
         boot_disk_size_gb = 30
-        num_local_ssds    = 1
+        num_local_ssds    = 0
       }
     }
     preemptible_worker_config {
@@ -39,6 +40,10 @@ resource "google_dataproc_cluster" "default" {
 
     software_config {
       image_version = "2.2-debian12"
+      optional_components = [
+        "DOCKER",
+        "JUPYTER",
+      ]
       override_properties = {
         "dataproc:dataproc.allow.zero.workers" = "true"
       }
@@ -49,36 +54,4 @@ resource "google_dataproc_cluster" "default" {
       timeout_sec = 500
     }
   }
-}
-
-# Create a single Compute Engine instance
-# that uses the network and subnet
-# install Docker and run jupyter notebook
-resource "google_compute_instance" "default" {
-  name         = "jupyter-vm"
-  machine_type = var.instance_type
-  zone         = var.zone
-  tags         = ["ssh", "jupyter"]
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
-
-
-  # Install Docker and run jupyter notebook
-  metadata_startup_script = file("scripts/jupyter.sh")
-  metadata = {
-    ssh-keys = "${var.user}:${var.public_key}"
-  }
-
-  network_interface {
-    subnetwork = google_compute_subnetwork.default.id
-
-    access_config {
-      # Include this section to give the VM an external IP address
-    }
-  }
-
 }

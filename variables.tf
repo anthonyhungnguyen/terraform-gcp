@@ -7,11 +7,11 @@ variable "region" {
 }
 
 variable "zone" {
-  default = "us-central1-a"
+  default = "us-central1-d"
 }
 
 variable "instance_type" {
-  default = "n1-standard-2"
+  default = "n1-standard-4"
 }
 
 variable "image_version" {
